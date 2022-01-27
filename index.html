@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://d3js.org/d3.v5.min.js"></script><link href="c3/c3.css" rel="stylesheet"><script src="c3/c3.min.js"></script><title>presentation</title><script defer="defer" src="node_vendors.e40d6e35fd6ab0002b88.js"></script><script defer="defer" src="main.69eb4a8d7ecf8a6b3bc5.js"></script></head><body><div class="reveal"><div class="slides"><section><h1>D3 and C3</h1></section><section><h2>Today topics</h2><ul><li class="fragment">What is D3</li><li class="fragment">Why you need it</li><li class="fragment">How use D3</li><li class="fragment">What is C3</li><li class="fragment">Compare C3 and D3</li><li class="fragment">Make some conclusions</li></ul></section><section><h2>What is D3</h2><span>D3.js is a JavaScript library for manipulating documents based on data. D3 helps you bring data to life using HTML, SVG, and CSS</span></section><section><h2>Why you need D3</h2><div class="slide-container"><div class="slide-container__side"><img id="himym" src="./assets/himym.jpg" alt="error"></div><div class="slide-container__side"><ul><li>data visualization</li><li>data-driven manipulation with DOM</li><li>dynamic attribute assignment</li></ul></div></div></section><section><section><h2>How use D3</h2></section><section><h3>Let's make some diagram</h3><div class="slide-container _vertical"><div class="slide-container__part"><span>1) We need to get D3 object</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                <head>
+                  ...
+                  <script src="https://d3js.org/d3.v5.min.js">
+                  ...
+                </head>
+              </script></code></pre><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                typeof d3 // 'object'
+              </script></code></pre></div><div class="slide-container__part"><span>2) Prepare some data</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const data = [{month: 'янв-2001', sales: 1000 }, {month: 'фев-2001', sales: 500 }, ... {month: 'дек-2001', sales: 2000 }];
+              </script></code></pre></div></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>3) Create target HTMLElement</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                  ...
+                <div id="diagram"></div>
+                  ...
+              </script></code></pre></div><div class="slide-container__part"><span>4) Define size and margins</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const width = 800;
+                const heigth = 500;
+                const margin = {
+                  top: 10,
+                  bottom: 10,
+                  left: 10,
+                  rigth: 10,
+                };
+              </script></code></pre></div></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>5) Create firts magic tool</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const xCalculator = d3.scaleBand() // Creating a scale
+                .domain(d3.range(data.length)) // Based on the number of data-items
+                .range([margin.left, width - margin.right]) // and width of workspace
+                .padding(0.1); // with space items 10%          
+              </script></code></pre></div><div class="slide-container__part"><span>The resulting object will help us calculate the coordinate and proportional width for elements representing data-items in our data</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                xCalculator.bandwidth(); // each bar width ~ 58px
+                xCalculator(0); // first bar x ~ 16.5px
+                xCalculator(1); // second bar x ~ 81px
+              </script></code></pre></div></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>6) Another scale, vertical</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const maxValue = d3.max(data.map(item => item.sales)); // calc max value in our data
+                const yCalculator = d3.scaleLinear() // Creating a scale
+                  .domain([0, maxValue]) // Mapping a range of values in our data
+                  .range([height - margin.bottom, margin.top]); // to height of workspace
+              </script></code></pre></div><div class="slide-container__part"><span>This scale will help us with calculating heigth of our bars. Because y-0 is at the top of diagram element, we had to invert the scale</span></div></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>7) And now we starting to draw our diagram</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const svg = d3.selectAll('#diagram') // find target elem
+                .append('svg') // create svg
+                .attr("class", "diagramSVG") // define className of svg
+                .attr("width", width + "px") // set width
+                .attr("height", height + "px") // and height
+              </script></code></pre></div><div class="slide-container__part"><span>All d3 metods return d3-element, so we can use long chain</span></div></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>8) Final part</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                svg // Take our svg element
+                .append('g') // create g - group
+                .selectAll('g') // select group
+                .data(data) // take our data
+                .enter() // From now on, all commands in the chain will be executed for each data-item
+                .append('rect') // create element for each data-item
+                .attr('fill', 'yellow') // set color
+                .attr('x', (item, index) => xCalculator(index)) // using scales to calculate attributs values
+                .attr('y', (item) => yCalculator(item.sales)) 
+                .attr('height', (item) => yCalculator(0) - yCalculator(item.sales))
+                .attr('width', xCalculator.bandwidth())
+              </script></code></pre></div><div class="slide-container__part"><span>With functions we have access to data-item, data and anything else</span></div></div></section><section><h2>Take a look, what we've done</h2><div id="diagram1"></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>It's nice, but says nothing</span></div><div class="slide-container__part"><span>9) We should add scales and ticks</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                function yAxis(g) {
+                  g.attr("transform", `translate(${margin.left}, 0)`)
+                    .call(d3.axisLeft(yCalculator).ticks(null, data.format));
+                }                
+                function xAxis(g) {
+                  g.attr("transform", `translate(0,${height - margin.bottom})`)
+                    .call(d3.axisBottom(xCalculator).tickFormat(i => data[i].month))
+                }
+                svg.append("g").call(yAxis);
+                svg.append("g").call(xAxis);
+              </script></code></pre></div></div></section><section><h2>Now it's better</h2><div id="diagram2"></div></section></section><section><section><div class="slide-container"><div class="slide-container__side"><span>Expectations</span> <img src="./assets/expectaitions.png" alt="error"></div><div class="slide-container__side"><span>Reality</span> <img src="./assets/realyty.png" alt="error"></div></div></section><section><div class="slide-container__part _vertical"><span>So, we can do anything. Step by step, one data-item after another. But, it will take so much time and efforts... And will it be pretty?</span></div><div class="slide-container__part _vertical"><span>What if someone has already done all the preparatory work for us?</span></div></section></section><section><section><h2>C3.js</h2><span>C3 is framework for D3. It provides methods for the most popular cases. You dont need to be involved in process of elements creating. Just give it some data and options.</span><div>For example, let's repeat our diagram by C3</div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>1) Download c3-files and preapre data</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                  <link href="c3/c3.css" rel="stylesheet">
+                  <script src="c3/c3.min.js"></script>              
+              </code></pre><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const values = data.map(item => item.sales);
+                const xTicks = data.map(item => item.month);
+              </script></code></pre></div><div class="slide-container__part"><span>2) Use method generate</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                const chart = c3.generate({
+                  bindto: '#c3-diagram',
+                  data: { x: 'x', 
+                  columns: [ ['x', ...xTicks] , ['sales', ...values] ], 
+                  type: 'bar' },
+                  bar: { width: { ratio: 0.9 }},
+                  axis: { x: {type: 'category'} }
+                });
+              </script></code></pre></div></div></section><section data-background-color="rgb(255, 255, 255)"><div id="c3-diagram"></div></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>We can add some data</span><pre><code data-trim data-noescape data-line-numbers class="cpp"><script type="text/template">
+                chart.load({
+                  columns: [
+                      ['refunds', 100, 140, 130, 70, 90, 100, 50, 60, 90, 40, 150, 75, 85, 95]
+                    ]
+                });              
+              </script></code></pre></div></div></section><section data-background-color="rgb(255, 255, 255)"><div id="c3-diagram2"></div></section></section><section><section><h2>D3 vs C3</h2></section><section><div class="slide-container"><div class="slide-container__side half"><h3>D3</h3><div class="slide-container__part"><h4>+</h4><ul><li>control every step</li><li>flexibility</li><li>over 300 tools</li></ul></div><div class="slide-container__part"><h4>-</h4><ul><li>complexity</li><li>design issues</li></ul></div></div><div class="slide-container__side half"><h3>C3</h3><div class="slide-container__part"><h4>+</h4><ul><li>easy start</li><li>common templates</li><li>nice design</li></ul></div><div class="slide-container__part"><h4>-</h4><ul><li>not flexibility</li><li>closed process</li></ul></div></div></div></section></section><section><section><h2>Total</h2></section><section><div class="slide-container _vertical"><div class="slide-container__part"><span>If you just need to show the data in some standard form - choose C3. Fast, simple, pretty</span></div><div class="slide-container__part"><span>But if you need something special, a custom solution - only D3 will help you</span></div></div></section></section><section><h2>Thank you</h2><span>Created by </span><a href="https://github.com/TroitskiyAndrew">Troitskiy Andrew</a></section></div></div></body></html>
